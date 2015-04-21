@@ -7,7 +7,7 @@ var agent = require("../lib/index.js");
 var port = argv.p || "8080";
 var root = argv.r || ".";
 
-var pseudo_root_path = path.join(__dirname, path.normalize( root ) );
+var pseudo_root_path = path.join( process.cwd(), path.normalize( root ) );
 
 agent( port, pseudo_root_path );
 

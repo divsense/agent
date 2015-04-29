@@ -3,39 +3,182 @@ var ALIEN_ID = "agent";
 
 var request = require("superagent");
 
+var adda = require("divsense-adda-helper");
 var alienBody = require("divsense-alien-body")( ALIEN_ID );
 //var alienBody = require("../../divsense-alien-body/index.js")( ALIEN_ID, true );
 
 var handleHeadEvent = function(req, res, next){
 
-	console.log( "AGENT. INIT HEAD:", req );
+//    console.log( "AGENT. HEAD EVENT:", req );
 
 	var input = req.params.user_input;
 	var url = "localhost:" + input;
 
 	request.get("/fs")
 		   .set('Accept', 'application/json')
-		   .end(function(err,cres){
-//               console.log(">>CLIENT", err, cres.body );
-			   res.content = { 
-				   head:{
-						icon: "fa-cube",
-						text: url,
-						content: cres.body 
-					}
-			   };
-			   next( res );
-		   });
+		   .end( initHead ) ;
 
+	function initHead( err, data ){
+	   res.content = { 
+		   head:{
+				icon: "fa-cube",
+				text: url,
+				content: data.body,
+				data_attrs: [
+				   ["call", "save"],
+				   ["signal", "content node parent"],
+			   ],
+			}
+	   };
+	   next( res );
+	}
 
 }
 
+var handleChannelEvent = function(req, res, next){
 
-//alienBody.on("channel", handleChannelEvent );
+	if( req.method === "call" ){
+//        processSignal();
+	}
+	else if( req.method === "signal" ){
+		processSignal();
+	}
+
+	function processSignal(){
+
+		var mode = adda.getUnitData( "u", "tag", req.params.selected );
+		var filename = req.params.content.t;
+		var url = "/file?name=" + filename + "&mode=" + mode;
+
+		request.get( url )
+			   .set('Accept', 'application/json')
+			   .end( function ( err, resp ){
+				   res.content = resp.body.data;
+				   next( res );
+			   });
+	}
+}
+
+
+alienBody.on("channel", handleChannelEvent );
 
 alienBody.on("head", handleHeadEvent );
 
-},{"divsense-alien-body":2,"superagent":3}],2:[function(require,module,exports){
+},{"divsense-adda-helper":2,"divsense-alien-body":3,"superagent":4}],2:[function(require,module,exports){
+// ADDA Helpers
+//
+
+var props = function( obj ){
+	return Object.keys( obj ).reduce(function(m,a){
+		m.push( [ a, obj[ a ] ] );
+		return m;
+	}, []);
+}
+
+var makeNode = function( id, params ){
+
+	return function(set){
+
+		set = set || {};
+
+		var s = set[ id ] = {};
+
+		if( params.t ) s.t = params.t;
+
+		if( params.u ) s.u = props( params.u );
+
+		if( params.k ) s.k = props( params.k );
+
+		return set;
+	}
+}
+
+var setChildNodes = function( parentId, cids, branchName ){
+
+	return function(set){
+
+		branchName = branchName || "children-mmap";
+
+		var node = set[ parentId ];
+
+		node.c = node.c || [];
+
+		node.c.push( [ branchName, cids] );
+
+		cids.forEach( function(id){ set[id].p = parentId });
+
+		return set;
+	}
+}
+
+var setChild = function( parentId, childId, branchName ){
+
+	return function(set){
+
+		branchName = branchName || "children-mmap";
+
+		var node = set[ parentId ];
+
+		node.c = node.c || [];
+
+		if( !node.c.length ){
+			node.c.push( [ branchName, []] );
+		}
+
+		node.c = node.c.map(function(a){
+			if( a[0] === branchName )
+			a[1].push( childId );
+		return a;
+		});
+
+		set[ childId ].p = parentId;
+
+		return set;
+	}
+}
+
+var init = makeNode("__root__", {});
+
+var toArray = function( set, id, array ){
+
+	var node = set[ id ];
+	node.id = id;
+	delete node.p;
+
+	array.push( node );
+
+	return (node.c || []).reduce(function(acc,branch){
+
+		acc = branch[1].reduce(function(m,a){
+			m = toArray( set, a, m );
+			return m;
+		}, acc );
+
+		return acc;
+
+	}, array );
+}
+
+var getUnitData = function( level, dataAttr, node ){
+	return (node[ level ] || [] ).reduce(function(m,a){
+		if( a[0] === dataAttr ) m = a[1];
+		return m;
+	}, "");
+}
+
+exports.makeNode = makeNode;
+exports.setChildNodes = setChildNodes;
+exports.setChild = setChild;
+exports.init = init;
+
+exports.getUnitData = getUnitData;
+
+exports.toArray = function( set ){
+	return toArray( set, "__root__", [] );
+}
+
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
 var debugMode;
@@ -121,7 +264,7 @@ module.exports = function( id, debug ){
 
 }
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /**
  * Module dependencies.
  */
@@ -1246,7 +1389,7 @@ request.put = function(url, data, fn){
 
 module.exports = request;
 
-},{"emitter":4,"reduce":5}],4:[function(require,module,exports){
+},{"emitter":5,"reduce":6}],5:[function(require,module,exports){
 
 /**
  * Expose `Emitter`.
@@ -1412,7 +1555,7 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 
 /**
  * Reduce `arr` with `fn`.

@@ -31,7 +31,7 @@
     "vinyl-source-stream": "^1.1.0"
   },
   "dependencies": {
-    "divsense-adda-helper": "0.0.4",
+    "divsense-adda-helper": "0.0.5",
     "divsense-alien-body": "0.0.6",
     "minimist": "^1.1.1",
     "restify": "^3.0.2",

@@ -7,8 +7,6 @@ var alienBody = require("alien-body")( ALIEN_ID );
 
 var handleHeadEvent = function(req, res, next){
 
-//    console.log( "AGENT. HEAD EVENT:", req );
-
 	var input = req.params.user_input;
 	var url = "localhost:" + input;
 
@@ -35,12 +33,14 @@ var handleHeadEvent = function(req, res, next){
 
 var handleChannelEvent = function(req, res, next){
 
-	if( req.method === "call" ){
+//    if( req.method === "call" ){
 //        processSignal();
-	}
-	else if( req.method === "signal" ){
-		processSignal();
-	}
+//    }
+//    else if( req.method === "signal" ){
+//        processSignal();
+//    }
+
+	next( res );
 
 	function processSignal(){
 

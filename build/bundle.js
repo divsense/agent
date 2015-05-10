@@ -3,9 +3,8 @@ var ALIEN_ID = "agent";
 
 var request = require("superagent");
 
-var adda = require("divsense-adda-helper");
-var alienBody = require("divsense-alien-body")( ALIEN_ID );
-//var alienBody = require("../../divsense-alien-body/index.js")( ALIEN_ID, true );
+var adda = require("adda-helper");
+var alienBody = require("alien-body")( ALIEN_ID );
 
 var handleHeadEvent = function(req, res, next){
 
@@ -64,7 +63,7 @@ alienBody.on("channel", handleChannelEvent );
 
 alienBody.on("head", handleHeadEvent );
 
-},{"divsense-adda-helper":2,"divsense-alien-body":3,"superagent":4}],2:[function(require,module,exports){
+},{"adda-helper":2,"alien-body":3,"superagent":4}],2:[function(require,module,exports){
 // ADDA Helpers
 //
 
@@ -137,6 +136,12 @@ var setChild = function( parentId, childId, branchName ){
 	}
 }
 
+var addChildNode = function( parentId, id, params, branchName ){
+	return function(set){
+		return setChild( parentId, id, branchName )( makeNode( id, params)( set ) );
+	}
+}
+
 var init = makeNode("__root__", {});
 
 var toArray = function( set, id, array ){
@@ -171,6 +176,7 @@ exports.setChildNodes = setChildNodes;
 exports.setChild = setChild;
 exports.init = init;
 
+exports.addChildNode = addChildNode;
 exports.getUnitData = getUnitData;
 
 exports.toArray = function( set ){
@@ -223,9 +229,9 @@ var getMessage = function( evt ){
 
 
 	try{
-		var req = JSON.parse( evt.data );
+		var req = json.parse( evt.data );
 
-		debugMode && console.log( "ALIEN-BODY. MSG FROM DIVSENSE:", req );
+		debugmode && console.log( "alien-body. msg from divsense:", req );
 
 		var res = {
 			id:		req.id,
@@ -234,12 +240,12 @@ var getMessage = function( evt ){
 		};
 
 		emit( req, res, function(res){
-			evt.source.postMessage( JSON.stringify( res ), evt.origin );
+			evt.source.postmessage( json.stringify( res ), evt.origin );
 		});
 
 	}
 	catch(e){
-		debugMode && console.log( "ALIEN-BODY ERROR. INVALID MESSAGE:", evt.data );
+		debugmode && console.log( "alien-body error. invalid message:", evt.data );
 	}
 
 

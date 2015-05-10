@@ -2,9 +2,8 @@ var ALIEN_ID = "agent";
 
 var request = require("superagent");
 
-var adda = require("divsense-adda-helper");
-var alienBody = require("divsense-alien-body")( ALIEN_ID );
-//var alienBody = require("../../divsense-alien-body/index.js")( ALIEN_ID, true );
+var adda = require("adda-helper");
+var alienBody = require("alien-body")( ALIEN_ID );
 
 var handleHeadEvent = function(req, res, next){
 
